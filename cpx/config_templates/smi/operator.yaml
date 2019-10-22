@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: smi-adapter-istio
-  namespace: istio-system
+  name: smi-adapter-cpx
+  namespace: cpx-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: smi-adapter-istio
+      name: smi-adapter-cpx
   template:
     metadata:
       labels:
-        name: smi-adapter-istio
+        name: smi-adapter-cpx
       annotations:
-        sidecar.istio.io/inject: "false"
+        sidecar.cpx.io/inject: "false"
     spec:
-      serviceAccountName: smi-adapter-istio
+      serviceAccountName: smi-adapter-cpx
       containers:
-        - name: smi-adapter-istio
-          image: layer5/smi-istio:latest
+        - name: smi-adapter-cpx
+          image: layer5/smi-cpx:latest
           command:
-          - smi-adapter-istio
+          - smi-adapter-cpx
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
@@ -30,4 +30,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "smi-adapter-istio"
+              value: "smi-adapter-cpx"

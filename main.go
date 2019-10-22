@@ -1,4 +1,4 @@
-// Copyright 2019 Layer5.io
+// Copyright 2019 Layer5, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/layer5io/meshery-istio/istio"
-	mesh "github.com/layer5io/meshery-istio/meshes"
+	"github.com/layer5io/meshery-cpx/cpx"
+	mesh "github.com/layer5io/meshery-cpx/meshes"
 )
 
 var (
@@ -55,7 +55,7 @@ func main() {
 	s := grpc.NewServer(
 	// grpc.Creds(credentials.NewServerTLSFromCert(&insecure.Cert)),
 	)
-	mesh.RegisterMeshServiceServer(s, &istio.Client{})
+	mesh.RegisterMeshServiceServer(s, &cpx.Client{})
 
 	// Serve gRPC Server
 	logrus.Infof("Serving gRPC on %s", addr)

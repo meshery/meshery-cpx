@@ -6,14 +6,14 @@ proto:
 	protoc -I meshes/ meshes/meshops.proto --go_out=plugins=grpc:./meshes/
 
 docker:
-	DOCKER_BUILDKIT=1 docker build -t layer5/meshery-istio .
+	DOCKER_BUILDKIT=1 docker build -t layer5/meshery-cpx .
 
 docker-run:
-	(docker rm -f meshery-istio) || true
-	docker run --name meshery-istio -d \
+	(docker rm -f meshery-cpx) || true
+	docker run --name meshery-cpx -d \
 	-p 10000:10000 \
 	-e DEBUG=true \
-	layer5/meshery-istio
+	layer5/meshery-cpx
 
 run:
 	DEBUG=true GOPROXY=direct GOSUMDB=off go run main.go

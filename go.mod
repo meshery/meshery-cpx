@@ -1,4 +1,4 @@
-module github.com/layer5io/meshery-istio
+module github.com/layer5io/meshery-cpx
 
 go 1.13
 

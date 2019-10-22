@@ -1,4 +1,4 @@
-package istio
+package cpx
 
 import (
 	"io/ioutil"
@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const smiBasePath = "istio/config_templates/smi/"
+const smiBasePath = "cpx/config_templates/smi/"
 
 var smiFiles = []string{
 	"split_v1alpha1_trafficsplit_crd.yaml",

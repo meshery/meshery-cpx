@@ -1,4 +1,4 @@
-package istio
+package cpx
 
 import (
 	"archive/tar"
@@ -20,23 +20,23 @@ import (
 )
 
 const (
-	repoURL     = "https://api.github.com/repos/istio/istio/releases/latest"
+	repoURL     = "https://api.github.com/repos/cpx/cpx/releases/latest"
 	urlSuffix   = "-linux.tar.gz"
 	crdPattern  = "crd(.*)yaml"
 	cachePeriod = 6 * time.Hour
 )
 
 var (
-	localByPassFile = "/app/istio.tar.gz"
+	localByPassFile = "/app/cpx.tar.gz"
 
-	localFile                  = path.Join(os.TempDir(), "istio.tar.gz")
-	destinationFolder          = path.Join(os.TempDir(), "istio")
+	localFile                  = path.Join(os.TempDir(), "cpx.tar.gz")
+	destinationFolder          = path.Join(os.TempDir(), "cpx")
 	basePath                   = path.Join(destinationFolder, "%s")
-	installFile                = path.Join(basePath, "install/kubernetes/istio-demo.yaml")
-	installWithmTLSFile        = path.Join(basePath, "install/kubernetes/istio-demo-auth.yaml")
+	installFile                = path.Join(basePath, "install/kubernetes/cpx-demo.yaml")
+	installWithmTLSFile        = path.Join(basePath, "install/kubernetes/cpx-demo-auth.yaml")
 	bookInfoInstallFile        = path.Join(basePath, "samples/bookinfo/platform/kube/bookinfo.yaml")
 	bookInfoGatewayInstallFile = path.Join(basePath, "samples/bookinfo/networking/bookinfo-gateway.yaml")
-	crdFolder                  = path.Join(basePath, "install/kubernetes/helm/istio-init/files/")
+	crdFolder                  = path.Join(basePath, "install/kubernetes/helm/cpx-init/files/")
 
 	defaultBookInfoDestRulesFile                 = path.Join(basePath, "samples/bookinfo/networking/destination-rule-all-mtls.yaml")
 	bookInfoRouteToV1AllServicesFile             = path.Join(basePath, "samples/bookinfo/networking/virtual-service-all-v1.yaml")
@@ -60,7 +60,7 @@ type asset struct {
 }
 
 func (iClient *Client) getLatestReleaseURL() error {
-	if iClient.istioReleaseDownloadURL == "" || time.Since(iClient.istioReleaseUpdatedAt) > cachePeriod {
+	if iClient.cpxReleaseDownloadURL == "" || time.Since(iClient.cpxReleaseUpdatedAt) > cachePeriod {
 		logrus.Debugf("API info url: %s", repoURL)
 		resp, err := http.Get(repoURL)
 		if err != nil {
@@ -94,9 +94,9 @@ func (iClient *Client) getLatestReleaseURL() error {
 		if result != nil && result.Assets != nil && len(result.Assets) > 0 {
 			for _, asset := range result.Assets {
 				if strings.HasSuffix(asset.Name, urlSuffix) {
-					iClient.istioReleaseVersion = strings.Replace(asset.Name, urlSuffix, "", -1)
-					iClient.istioReleaseDownloadURL = asset.DownloadURL
-					iClient.istioReleaseUpdatedAt = time.Now()
+					iClient.cpxReleaseVersion = strings.Replace(asset.Name, urlSuffix, "", -1)
+					iClient.cpxReleaseDownloadURL = asset.DownloadURL
+					iClient.cpxReleaseUpdatedAt = time.Now()
 					return nil
 				}
 			}
@@ -117,16 +117,16 @@ func (iClient *Client) downloadFile(localFile string) error {
 	}
 	defer dFile.Close()
 
-	resp, err := http.Get(iClient.istioReleaseDownloadURL)
+	resp, err := http.Get(iClient.cpxReleaseDownloadURL)
 	if err != nil {
-		err = errors.Wrapf(err, "unable to download the file from URL: %s", iClient.istioReleaseDownloadURL)
+		err = errors.Wrapf(err, "unable to download the file from URL: %s", iClient.cpxReleaseDownloadURL)
 		logrus.Error(err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("unable to download the file from URL: %s, status: %s", iClient.istioReleaseDownloadURL, resp.Status)
+		err = fmt.Errorf("unable to download the file from URL: %s, status: %s", iClient.cpxReleaseDownloadURL, resp.Status)
 		logrus.Error(err)
 		return err
 	}
@@ -198,17 +198,17 @@ func (iClient *Client) untarPackage(destination, fileToUntar string) error {
 	}
 }
 
-func (iClient *Client) downloadIstio() (string, error) {
+func (iClient *Client) downloadCpx() (string, error) {
 	var fileName string
 	_, err := os.Stat(localByPassFile)
 	if err != nil {
-		logrus.Debug("preparing to download the latest istio release")
+		logrus.Debug("preparing to download the latest cpx release")
 		err := iClient.getLatestReleaseURL()
 		if err != nil {
 			return "", err
 		}
-		fileName = iClient.istioReleaseVersion
-		downloadURL := iClient.istioReleaseDownloadURL
+		fileName = iClient.cpxReleaseVersion
+		downloadURL := iClient.cpxReleaseDownloadURL
 		logrus.Debugf("retrieved latest file name: %s and download url: %s", fileName, downloadURL)
 
 		proceedWithDownload := true
@@ -240,8 +240,8 @@ func (iClient *Client) downloadIstio() (string, error) {
 	return fileName, nil
 }
 
-func (iClient *Client) getIstioComponentYAML(fileName string) (string, error) {
-	specificVersionName, err := iClient.downloadIstio()
+func (iClient *Client) getCpxComponentYAML(fileName string) (string, error) {
+	specificVersionName, err := iClient.downloadCpx()
 	if err != nil {
 		return "", err
 	}
@@ -276,7 +276,7 @@ func (iClient *Client) getCRDsYAML() ([]string, error) {
 		return nil, err
 	}
 
-	specificVersionName, err := iClient.downloadIstio()
+	specificVersionName, err := iClient.downloadCpx()
 	if err != nil {
 		return nil, err
 	}
@@ -301,45 +301,45 @@ func (iClient *Client) getCRDsYAML() ([]string, error) {
 	return res, nil
 }
 
-func (iClient *Client) getLatestIstioYAML(installmTLS bool) (string, error) {
+func (iClient *Client) getLatestCpxYAML(installmTLS bool) (string, error) {
 	if installmTLS {
-		return iClient.getIstioComponentYAML(installWithmTLSFile)
+		return iClient.getCpxComponentYAML(installWithmTLSFile)
 	}
-	return iClient.getIstioComponentYAML(installFile)
+	return iClient.getCpxComponentYAML(installFile)
 }
 
 func (iClient *Client) getBookInfoAppYAML() (string, error) {
-	return iClient.getIstioComponentYAML(bookInfoInstallFile)
+	return iClient.getCpxComponentYAML(bookInfoInstallFile)
 }
 
 func (iClient *Client) getBookInfoGatewayYAML() (string, error) {
-	return iClient.getIstioComponentYAML(bookInfoGatewayInstallFile)
+	return iClient.getCpxComponentYAML(bookInfoGatewayInstallFile)
 }
 
 func (iClient *Client) getBookInfoDefaultDesinationRulesYAML() (string, error) {
-	return iClient.getIstioComponentYAML(defaultBookInfoDestRulesFile)
+	return iClient.getCpxComponentYAML(defaultBookInfoDestRulesFile)
 }
 
 func (iClient *Client) getBookInfoRouteToV1AllServicesYAML() (string, error) {
-	return iClient.getIstioComponentYAML(bookInfoRouteToV1AllServicesFile)
+	return iClient.getCpxComponentYAML(bookInfoRouteToV1AllServicesFile)
 }
 
 func (iClient *Client) getBookInfoRouteToReviewsV2ForJasonFile() (string, error) {
-	return iClient.getIstioComponentYAML(bookInfoRouteToReviewsV2ForJasonFile)
+	return iClient.getCpxComponentYAML(bookInfoRouteToReviewsV2ForJasonFile)
 }
 
 func (iClient *Client) getBookInfoCanary50pcReviewsV3File() (string, error) {
-	return iClient.getIstioComponentYAML(bookInfoCanary50pcReviewsV3File)
+	return iClient.getCpxComponentYAML(bookInfoCanary50pcReviewsV3File)
 }
 
 func (iClient *Client) getBookInfoCanary100pcReviewsV3File() (string, error) {
-	return iClient.getIstioComponentYAML(bookInfoCanary100pcReviewsV3File)
+	return iClient.getCpxComponentYAML(bookInfoCanary100pcReviewsV3File)
 }
 
 func (iClient *Client) getBookInfoInjectDelayForRatingsForJasonFile() (string, error) {
-	return iClient.getIstioComponentYAML(bookInfoInjectDelayForRatingsForJasonFile)
+	return iClient.getCpxComponentYAML(bookInfoInjectDelayForRatingsForJasonFile)
 }
 
 func (iClient *Client) getBookInfoInjectHTTPAbortToRatingsForJasonFile() (string, error) {
-	return iClient.getIstioComponentYAML(bookInfoInjectHTTPAbortToRatingsForJasonFile)
+	return iClient.getCpxComponentYAML(bookInfoInjectHTTPAbortToRatingsForJasonFile)
 }

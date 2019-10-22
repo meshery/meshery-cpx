@@ -1,4 +1,4 @@
-// Copyright 2019 Layer5.io
+// Copyright 2019 Layer5, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package istio
+package cpx
 
 import (
 	"bytes"
@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/ghodss/yaml"
-	"github.com/layer5io/meshery-istio/meshes"
+	"github.com/layer5io/meshery-cpx/meshes"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	hipsterShopIstioManifestsURL      = "https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/istio-manifests.yaml"
+	hipsterShopCpxManifestsURL      = "https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/cpx-manifests.yaml"
 	hipsterShopKubernetesManifestsURL = "https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/kubernetes-manifests.yaml"
 )
 
@@ -54,7 +54,7 @@ func (iClient *Client) CreateMeshInstance(_ context.Context, k8sReq *meshes.Crea
 
 	ic, err := newClient(k8sConfig, contextName)
 	if err != nil {
-		err = errors.Wrapf(err, "unable to create a new istio client")
+		err = errors.Wrapf(err, "unable to create a new cpx client")
 		logrus.Error(err)
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (iClient *Client) updateResource(ctx context.Context, res schema.GroupVersi
 
 // MeshName just returns the name of the mesh the client is representing
 func (iClient *Client) MeshName(context.Context, *meshes.MeshNameRequest) (*meshes.MeshNameResponse, error) {
-	return &meshes.MeshNameResponse{Name: "Istio"}, nil
+	return &meshes.MeshNameResponse{Name: "Cpx"}, nil
 }
 
 func (iClient *Client) applyRulePayload(ctx context.Context, namespace string, newBytes []byte, delete, isCustomOp bool) error {
@@ -292,7 +292,7 @@ RETRY:
 	return nil
 }
 
-func (iClient *Client) applyIstioCRDs(ctx context.Context, delete bool) error {
+func (iClient *Client) applyCpxCRDs(ctx context.Context, delete bool) error {
 	crdYAMLs, err := iClient.getCRDsYAML()
 	if err != nil {
 		return err
@@ -336,7 +336,7 @@ func (iClient *Client) labelNamespaceForAutoInjection(ctx context.Context, names
 		ns.SetName(namespace)
 	}
 	ns.SetLabels(map[string]string{
-		"istio-injection": "enabled",
+		"cpx-injection": "enabled",
 	})
 	err = iClient.updateResource(ctx, res, ns)
 	if err != nil {
@@ -358,7 +358,7 @@ func (iClient *Client) createNamespace(ctx context.Context, namespace string) er
 }
 
 func (iClient *Client) executeTemplate(ctx context.Context, username, namespace, templateName string) (string, error) {
-	tmpl, err := template.ParseFiles(path.Join("istio", "config_templates", templateName))
+	tmpl, err := template.ParseFiles(path.Join("cpx", "config_templates", templateName))
 	if err != nil {
 		err = errors.Wrapf(err, "unable to parse template")
 		logrus.Error(err)
@@ -380,13 +380,13 @@ func (iClient *Client) executeTemplate(ctx context.Context, username, namespace,
 func (iClient *Client) executeInstall(ctx context.Context, installmTLS bool, arReq *meshes.ApplyRuleRequest) error {
 	arReq.Namespace = ""
 	if arReq.DeleteOp {
-		defer iClient.applyIstioCRDs(ctx, arReq.DeleteOp)
+		defer iClient.applyCpxCRDs(ctx, arReq.DeleteOp)
 	} else {
-		if err := iClient.applyIstioCRDs(ctx, arReq.DeleteOp); err != nil {
+		if err := iClient.applyCpxCRDs(ctx, arReq.DeleteOp); err != nil {
 			return err
 		}
 	}
-	yamlFileContents, err := iClient.getLatestIstioYAML(installmTLS)
+	yamlFileContents, err := iClient.getLatestCpxYAML(installmTLS)
 	if err != nil {
 		return err
 	}
@@ -451,12 +451,12 @@ func (iClient *Client) executeHipsterShopInstall(ctx context.Context, arReq *mes
 	if err != nil {
 		return err
 	}
-	istioManifestsContent, err := hipsterShopFilecontents(hipsterShopIstioManifestsURL)
+	cpxManifestsContent, err := hipsterShopFilecontents(hipsterShopCpxManifestsURL)
 	if err != nil {
 		return err
 	}
 
-	var yamlFileContents = fmt.Sprintf("%s\n---\n%s", kubernetesManifestsContent, istioManifestsContent)
+	var yamlFileContents = fmt.Sprintf("%s\n---\n%s", kubernetesManifestsContent, cpxManifestsContent)
 
 	if err := iClient.applyConfigChange(ctx, yamlFileContents, arReq.Namespace, arReq.DeleteOp, false); err != nil {
 		return err
@@ -486,10 +486,10 @@ func (iClient *Client) ApplyOperation(ctx context.Context, arReq *meshes.ApplyRu
 	isCustomOp := false
 
 	switch arReq.OpName {
-	case installmTLSIstioCommand:
+	case installmTLSCpxCommand:
 		installWithmTLS = true
 		fallthrough
-	case installIstioCommand:
+	case installCpxCommand:
 		go func() {
 			opName1 := "deploying"
 			if arReq.DeleteOp {
@@ -499,7 +499,7 @@ func (iClient *Client) ApplyOperation(ctx context.Context, arReq *meshes.ApplyRu
 				iClient.eventChan <- &meshes.EventsResponse{
 					OperationId: arReq.OperationId,
 					EventType:   meshes.EventType_ERROR,
-					Summary:     fmt.Sprintf("Error while %s Istio", opName1),
+					Summary:     fmt.Sprintf("Error while %s Cpx", opName1),
 					Details:     err.Error(),
 				}
 				return
@@ -511,8 +511,8 @@ func (iClient *Client) ApplyOperation(ctx context.Context, arReq *meshes.ApplyRu
 			iClient.eventChan <- &meshes.EventsResponse{
 				OperationId: arReq.OperationId,
 				EventType:   meshes.EventType_INFO,
-				Summary:     fmt.Sprintf("Istio %s successfully", opName),
-				Details:     fmt.Sprintf("The latest version of Istio is now %s.", opName),
+				Summary:     fmt.Sprintf("Cpx %s successfully", opName),
+				Details:     fmt.Sprintf("The latest version of Cpx is now %s.", opName),
 			}
 			return
 		}()
@@ -573,7 +573,7 @@ func (iClient *Client) ApplyOperation(ctx context.Context, arReq *meshes.ApplyRu
 				OperationId: arReq.OperationId,
 				EventType:   meshes.EventType_INFO,
 				Summary:     fmt.Sprintf("Book Info app %s successfully", opName),
-				Details:     fmt.Sprintf("The Istio canonical Book Info app is now %s.", opName),
+				Details:     fmt.Sprintf("The Cpx canonical Book Info app is now %s.", opName),
 			}
 			return
 		}()

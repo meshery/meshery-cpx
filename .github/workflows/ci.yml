@@ -1,4 +1,4 @@
-name: Meshery-Istio
+name: meshery-cpx
 on:
   push:
     branches:

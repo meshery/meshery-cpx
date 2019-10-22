@@ -1,4 +1,4 @@
-// Copyright 2019 Layer5.io
+// Copyright 2019 Layer5, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package istio
+package cpx
 
 import (
 	"time"
 
-	"github.com/layer5io/meshery-istio/meshes"
+	"github.com/layer5io/meshery-cpx/meshes"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -30,16 +30,16 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-// Client represents an Istio client in Meshery
+// Client represents an Cpx client in Meshery
 type Client struct {
 	config           *rest.Config
 	k8sClientset     *kubernetes.Clientset
 	k8sDynamicClient dynamic.Interface
 	eventChan        chan *meshes.EventsResponse
 
-	istioReleaseVersion     string
-	istioReleaseDownloadURL string
-	istioReleaseUpdatedAt   time.Time
+	cpxReleaseVersion     string
+	cpxReleaseDownloadURL string
+	cpxReleaseUpdatedAt   time.Time
 }
 
 func configClient(kubeconfig []byte, contextName string) (*rest.Config, error) {

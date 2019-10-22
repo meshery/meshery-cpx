@@ -1,16 +1,16 @@
 <img align="right" src="https://layer5.io/assets/images/cube-sh-small.png" />
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/layer5/meshery-istio.svg)](https://hub.docker.com/r/layer5/meshery-istio)
-[![Go Report Card](https://goreportcard.com/badge/github.com/layer5io/meshery-istio)](https://goreportcard.com/report/github.com/layer5io/meshery-istio)
-[![Build Status](https://github.com/layer5io/meshery-istio/workflows/Meshery-Istio/badge.svg)](https://github.com/layer5io/meshery-istio/actions)
-![GitHub](https://img.shields.io/github/license/layer5io/meshery-istio.svg)
-![GitHub issues by-label](https://img.shields.io/github/issues/layer5io/meshery-istio/help%20wanted.svg)
+[![Docker Pulls](https://img.shields.io/docker/pulls/layer5/meshery-cpx.svg)](https://hub.docker.com/r/layer5/meshery-cpx)
+[![Go Report Card](https://goreportcard.com/badge/github.com/layer5io/meshery-cpx)](https://goreportcard.com/report/github.com/layer5io/meshery-cpx)
+[![Build Status](https://github.com/layer5io/meshery-cpx/workflows/Meshery-Cpx/badge.svg)](https://github.com/layer5io/meshery-cpx/actions)
+![GitHub](https://img.shields.io/github/license/layer5io/meshery-cpx.svg)
+![GitHub issues by-label](https://img.shields.io/github/issues/layer5io/meshery-cpx/help%20wanted.svg)
 ![Website](https://img.shields.io/website/https/layer5.io/meshery.svg)
 ![Twitter Follow](https://img.shields.io/twitter/follow/layer5.svg?label=Follow&style=social)
 [![Slack](http://slack.layer5.io/badge.svg)](http://slack.layer5.io)
 
-# meshery-istio
-Meshery Adapter for Istio
+# meshery-cpx
+Meshery Adapter for CPX
 
 ><p align="center"><i>If you’re using Meshery or if you like the project, please ★ star this repository to show your support! 🤩</i></p>
 
