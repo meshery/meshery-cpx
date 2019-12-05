@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	hipsterShopCpxManifestsURL      = "https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/cpx-manifests.yaml"
+	hipsterShopCpxManifestsURL        = "https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/cpx-manifests.yaml"
 	hipsterShopKubernetesManifestsURL = "https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/kubernetes-manifests.yaml"
 )
 
