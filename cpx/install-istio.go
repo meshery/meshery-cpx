@@ -380,36 +380,22 @@ func (iClient *Client) runGenerateYamlScript(inputTmplFile string) (string, erro
 	return outputYamlFile, nil
 }
 
-/*
-func (iClient *Client) getCpxResourcesYamlFromURL(fileURL string) (string, error) {
-	fileYamlContents, err := getFileURLContents(fileURL)
-	if err != nil {
-		logrus.Debugf("Could not get %s contents", fileURL)
-		return "", nil
-	}
-	if strings.HasSuffix(fileURL, ".tmpl") {
-		// Generate yaml file using generate_yaml.sh script
-		installFileLoc, err = iClient.runGenerateYamlScript()
-		if err != nil {
-			logrus.Debugf("Could not generate YAML file from %s", fileName)
-		}
-	}
-
-}
-*/
 func (iClient *Client) getCpxYamlContent(fileName, fileURL string) (string, error) {
-	if err := iClient.downloadFileFromURL(fileName, fileURL); err != nil {
+	yamlFileName := fileName
+	var err error
+	if err = iClient.downloadFileFromURL(fileName, fileURL); err != nil {
 		return "", err
 	}
+
 	if strings.HasSuffix(fileName, ".tmpl") {
 		// Generate yaml file using generate_yaml.sh script
-		fileName, err := iClient.runGenerateYamlScript(fileName)
+		yamlFileName, err = iClient.runGenerateYamlScript(fileName)
 		if err != nil {
 			logrus.Debugf("Could not generate YAML file from %s", fileName)
 			return "", err
 		}
 	}
-	fileContents, err := ioutil.ReadFile(fileName)
+	fileContents, err := ioutil.ReadFile(yamlFileName)
 	if err != nil {
 		err = errors.Wrap(err, "unable to read file")
 		logrus.Error(err)
@@ -516,7 +502,7 @@ func (iClient *Client) getLatestCpxYAML(installmTLS bool) (string, error) {
 		return "", err
 	}
 	cpxYamlFileContents += cpxGatewayYaml + cpxSidecarYaml
-
+	logrus.Debugf("Dheeraj: CPX YAML contents: %s\n", cpxYamlFileContents)
 	return cpxYamlFileContents, nil
 }
 
