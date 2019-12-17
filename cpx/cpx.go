@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 	"text/template"
@@ -41,6 +42,11 @@ const (
 	hipsterShopKubernetesManifestsURL = "https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/master/release/kubernetes-manifests.yaml"
 )
 
+var (
+	configDir  = "/tmp/configdir"
+	configPath = path.Join(configDir, "config")
+)
+
 //CreateMeshInstance is called from UI
 func (iClient *Client) CreateMeshInstance(_ context.Context, k8sReq *meshes.CreateMeshInstanceRequest) (*meshes.CreateMeshInstanceResponse, error) {
 	var k8sConfig []byte
@@ -49,7 +55,7 @@ func (iClient *Client) CreateMeshInstance(_ context.Context, k8sReq *meshes.Crea
 		k8sConfig = k8sReq.K8SConfig
 		contextName = k8sReq.ContextName
 	}
-	// logrus.Debugf("received k8sConfig: %s", k8sConfig)
+	logrus.Debugf("Dheeraj: received k8sConfig: %s", k8sConfig)
 	logrus.Debugf("received contextName: %s", contextName)
 
 	ic, err := newClient(k8sConfig, contextName)
@@ -62,7 +68,30 @@ func (iClient *Client) CreateMeshInstance(_ context.Context, k8sReq *meshes.Crea
 	iClient.k8sDynamicClient = ic.k8sDynamicClient
 	iClient.eventChan = make(chan *meshes.EventsResponse, 100)
 	iClient.config = ic.config
+	if err = iClient.createConfigFile(k8sConfig); err != nil {
+		logrus.Debugf("Dheeraj: Config file %s could not be created", configPath)
+	}
 	return &meshes.CreateMeshInstanceResponse{}, nil
+}
+
+func (iClient *Client) createConfigFile(k8sConfig []byte) error {
+	logrus.Debugf("Dheeraj: In createConfigFile function.")
+	var _, err = os.Stat(configDir)
+	if os.IsNotExist(err) {
+		err = os.Mkdir(configDir, 0777)
+		if err != nil {
+			logrus.Debugf("Could not create the config directory %s", configDir)
+			return err
+		}
+	}
+	/* Write config to the file. If it already exists, then rewrite with new config */
+	err = ioutil.WriteFile(configPath, k8sConfig, 0644)
+	if err != nil {
+		logrus.Debugf("Dheeraj: Config file could not be written")
+	}
+	logrus.Debugf("Dheeraj: File created and written. ")
+	os.Setenv("KUBECONFIG", configPath)
+	return nil
 }
 
 func (iClient *Client) createResource(ctx context.Context, res schema.GroupVersionResource, data *unstructured.Unstructured) error {

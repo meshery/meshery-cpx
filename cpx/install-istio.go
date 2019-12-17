@@ -360,6 +360,25 @@ func (iClient *Client) downloadFileFromURL(filepath, fileURL string) error {
 	return err
 }
 
+func (iClient *Client) generateCpxWebhookSecret() error {
+	_, err := os.Stat(cpxWebhookCertsScript)
+	if err != nil {
+		if os.IsNotExist(err) {
+			logrus.Error(err)
+			return err
+		}
+	}
+	err = exec.Command("/bin/sh", cpxWebhookCertsScript).Run()
+	if err != nil {
+		logrus.Debugf("Dheeraj: Could not run CPX webhook script\n")
+		logrus.Error(err)
+		return err
+	} else {
+		logrus.Debugf("Dheeraj: Certificate/secret generated!")
+	}
+	return nil
+}
+
 func (iClient *Client) runGenerateYamlScript(inputTmplFile string) (string, error) {
 	_, err := os.Stat(cpxGenerateYamlScript)
 	if err != nil {
@@ -495,6 +514,11 @@ func (iClient *Client) getLatestCpxYAML(installmTLS bool) (string, error) {
 		logrus.Error(err)
 		return "", err
 	}
+	/* Generate certificate and secret needed for sidecar injection webhook service */
+	if err = iClient.generateCpxWebhookSecret(); err != nil {
+		logrus.Debugf("Dheeraj: Kya error hain be? error: %s", err.Error())
+	}
+
 	cpxSidecarYaml, err := iClient.getCpxYamlContent(cpxSidecarInjectionFile, cpxSidecarInjectionURL)
 	if err != nil {
 		err = errors.Wrapf(err, "Could not retrieve %s", cpxSidecarInjectionFile)
