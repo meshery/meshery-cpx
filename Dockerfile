@@ -23,6 +23,8 @@ COPY --from=bd /cpx /app/cpx
 COPY --from=bd /etc/passwd /etc/passwd
 ENV ISTIO_VERSION=1.3.0
 ENV CIA_VERSION=v1.1.0-beta
+COPY scripts /home/appuser/scripts
+RUN mkdir -p /home/appuser/configdir; chown -R appuser /home/appuser/
 USER appuser
 WORKDIR /app
 CMD ./meshery-cpx

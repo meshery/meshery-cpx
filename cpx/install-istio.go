@@ -21,10 +21,9 @@ import (
 )
 
 const (
-	repoURL                  = "https://api.github.com/repos/istio/istio/releases/19927523" //"https://api.github.com/repos/istio/istio/releases/latest"
+	repoURL                  = "https://api.github.com/repos/istio/istio/releases/19927523" // Istio v1.3.0
 	citrixRepoURL            = "https://github.com/citrix/citrix-istio-adaptor/archive/v1.1.0-beta.tar.gz"
 	urlSuffix                = "-linux.tar.gz"
-	cpxUrlSuffix             = "_linux(.*).tar.gz"
 	crdPattern               = "crd(.*)yaml"
 	cachePeriod              = 6 * time.Hour
 	cpxGenerateYamlScriptURL = "https://raw.githubusercontent.com/citrix/citrix-istio-adaptor/master/deployment/generate_yaml.sh"
@@ -129,7 +128,6 @@ func (iClient *Client) getLatestReleaseURL() error {
 func (iClient *Client) getCitrixIstioAdaptorURL() error {
 	if iClient.cpxResourcesDownloadURL == "" {
 		logrus.Debugf("Citrix Istio Adaptor API info url: %s", citrixRepoURL)
-		//	iClient.cpxResourcesVersion = "v1.1.0-beta"
 		iClient.cpxResourcesDownloadURL = citrixRepoURL
 		return nil
 	}
@@ -292,7 +290,8 @@ func (iClient *Client) downloadOtherCpxResources() (string, error) {
 
 		if proceedWithDownload {
 			if err = iClient.downloadFile(cpxDownloadURL, cpxIstioLocalFile); err != nil {
-				logrus.Debug("Citrix Istio Adaptor archive could not be downloaded!")
+				err = errors.Wrapf(err, "Citrix Istio Adaptor archive could not be downloaded")
+				logrus.Error(err)
 				return "", err
 			}
 			logrus.Debug("package successfully downloaded, now unzipping . . .")
@@ -302,7 +301,7 @@ func (iClient *Client) downloadOtherCpxResources() (string, error) {
 		logrus.Debugf("using local cpx bypass file: %s", cpxIstioLocalFile)
 	}
 	if err = iClient.untarPackage(cpxDestinationFolder, cpxIstioLocalFile); err != nil {
-		logrus.Debug("Citrix Istio Adaptor archive could not be unzipped!")
+		err = errors.Wrapf(err, "Citrix Istio Adaptor archive could not be unzipped")
 		return "", err
 	}
 	logrus.Debug("successfully unzipped")
@@ -370,12 +369,11 @@ func (iClient *Client) generateCpxWebhookSecret() error {
 	}
 	err = exec.Command("/bin/sh", cpxWebhookCertsScript).Run()
 	if err != nil {
-		logrus.Debugf("Dheeraj: Could not run CPX webhook script\n")
+		err = errors.Wrap(err, "Could not run CPX webhook script")
 		logrus.Error(err)
 		return err
-	} else {
-		logrus.Debugf("Dheeraj: Certificate/secret generated!")
 	}
+	logrus.Debugf("Certificate/secret generated for cpx-sidecar-injector webhook service")
 	return nil
 }
 
@@ -393,9 +391,8 @@ func (iClient *Client) runGenerateYamlScript(inputTmplFile string) (string, erro
 	if err != nil {
 		logrus.Error(err)
 		return "", err
-	} else {
-		logrus.Debugf("%s YAML generated!", outputYamlFile)
 	}
+	logrus.Debugf("%s YAML generated!", outputYamlFile)
 	return outputYamlFile, nil
 }
 
@@ -506,17 +503,16 @@ func (iClient *Client) getLatestCpxYAML(installmTLS bool) (string, error) {
 		return "", err
 	}
 	cpxGatewayYaml, err := iClient.getCpxYamlContent(cpxIngressGatewayFile, cpxIngressGatewayURL)
-	/*
-		cpxGatewayYaml, err := iClient.getCpxOtherResourcesComponentYAML(cpxIngressGatewayFile)
-	*/
 	if err != nil {
 		err = errors.Wrapf(err, "Could not retrieve %s", cpxIngressGatewayFile)
 		logrus.Error(err)
 		return "", err
 	}
-	/* Generate certificate and secret needed for sidecar injection webhook service */
+	// Generate certificate and secret needed for sidecar injection webhook service
 	if err = iClient.generateCpxWebhookSecret(); err != nil {
-		logrus.Debugf("Dheeraj: Kya error hain be? error: %s", err.Error())
+		err = errors.Wrapf(err, "Could not generate secret for cpx-sidecar-injector webhook service")
+		logrus.Error(err)
+		return "", err
 	}
 
 	cpxSidecarYaml, err := iClient.getCpxYamlContent(cpxSidecarInjectionFile, cpxSidecarInjectionURL)
@@ -526,7 +522,7 @@ func (iClient *Client) getLatestCpxYAML(installmTLS bool) (string, error) {
 		return "", err
 	}
 	cpxYamlFileContents += cpxGatewayYaml + cpxSidecarYaml
-	logrus.Debugf("Dheeraj: CPX YAML contents: %s\n", cpxYamlFileContents)
+	logrus.Debugf(" CPX YAML contents: %s\n", cpxYamlFileContents)
 	return cpxYamlFileContents, nil
 }
 
@@ -535,7 +531,6 @@ func (iClient *Client) getBookInfoAppYAML() (string, error) {
 }
 
 func (iClient *Client) getBookInfoGatewayYAML() (string, error) {
-	//return iClient.getCpxComponentYAML(bookInfoGatewayInstallFile)
 	gwYaml, err := iClient.getCpxOtherResourcesComponentYAML(bookInfoCpxGatewayInstallFile)
 	if err != nil {
 		err = errors.Wrapf(err, "Could not retrive %s", bookInfoCpxGatewayInstallFile)

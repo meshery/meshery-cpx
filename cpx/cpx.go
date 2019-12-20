@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 	"text/template"
@@ -43,8 +44,7 @@ const (
 )
 
 var (
-	configDir  = "/tmp/configdir"
-	configPath = path.Join(configDir, "config")
+	kubeConfigGenerationScript = path.Join(os.Getenv("HOME"), "scripts/generate-kubeconfig.sh")
 )
 
 //CreateMeshInstance is called from UI
@@ -55,7 +55,7 @@ func (iClient *Client) CreateMeshInstance(_ context.Context, k8sReq *meshes.Crea
 		k8sConfig = k8sReq.K8SConfig
 		contextName = k8sReq.ContextName
 	}
-	logrus.Debugf("Dheeraj: received k8sConfig: %s", k8sConfig)
+	logrus.Debugf("received k8sConfig: %s", k8sConfig)
 	logrus.Debugf("received contextName: %s", contextName)
 
 	ic, err := newClient(k8sConfig, contextName)
@@ -68,14 +68,37 @@ func (iClient *Client) CreateMeshInstance(_ context.Context, k8sReq *meshes.Crea
 	iClient.k8sDynamicClient = ic.k8sDynamicClient
 	iClient.eventChan = make(chan *meshes.EventsResponse, 100)
 	iClient.config = ic.config
-	if err = iClient.createConfigFile(k8sConfig); err != nil {
-		logrus.Debugf("Dheeraj: Config file %s could not be created", configPath)
+	if err = iClient.setKubeConfig(k8sConfig); err != nil {
+		err = errors.Wrapf(err, "KUBECONFIG env var could not be set")
+		logrus.Warn(err)
 	}
 	return &meshes.CreateMeshInstanceResponse{}, nil
 }
 
-func (iClient *Client) createConfigFile(k8sConfig []byte) error {
-	logrus.Debugf("Dheeraj: In createConfigFile function.")
+func (iClient *Client) setKubeConfig(k8sConfig []byte) error {
+	configDir := path.Join(os.TempDir(), "configdir")
+	configFile := "config"
+	var configPath string // /tmp/configdir/config
+	var err error
+	if len(k8sConfig) > 0 {
+		logrus.Debugf("Outside cluster environment. Creating config file from provided k8sconfig \n")
+		if configPath, err = iClient.createConfigFile(configDir, configFile, k8sConfig); err != nil {
+			logrus.Debugf("Config file %s/%s could not be created", configDir, configFile)
+			return err
+		}
+	} else {
+		logrus.Debugf("in-Cluster environment. Generating config file using script \n")
+		if configPath, err = iClient.generateInClusterKubeConfig(configDir, configFile); err != nil {
+			logrus.Debugf("Cluster config could not be generated")
+			return err
+		}
+	}
+	os.Setenv("KUBECONFIG", configPath)
+	logrus.Debugf("KUBECONFIG: %s", os.Getenv("KUBECONFIG"))
+	return nil
+}
+
+func (iClient *Client) createDir(configDir string) error {
 	var _, err = os.Stat(configDir)
 	if os.IsNotExist(err) {
 		err = os.Mkdir(configDir, 0777)
@@ -84,14 +107,39 @@ func (iClient *Client) createConfigFile(k8sConfig []byte) error {
 			return err
 		}
 	}
-	/* Write config to the file. If it already exists, then rewrite with new config */
-	err = ioutil.WriteFile(configPath, k8sConfig, 0644)
-	if err != nil {
-		logrus.Debugf("Dheeraj: Config file could not be written")
-	}
-	logrus.Debugf("Dheeraj: File created and written. ")
-	os.Setenv("KUBECONFIG", configPath)
 	return nil
+}
+
+func (iClient *Client) createConfigFile(kubeConfigDir, configFile string, k8sConfig []byte) (string, error) {
+	if err := iClient.createDir(kubeConfigDir); err != nil {
+		err = errors.Wrapf(err, "unable to create kubeconfig directory")
+		logrus.Error(err)
+		return "", err
+	}
+	configPath := path.Join(kubeConfigDir, configFile)
+	/* Write config to the file. If it already exists, then rewrite with new config */
+	if err := ioutil.WriteFile(configPath, k8sConfig, 0644); err != nil {
+		err = errors.Wrapf(err, "kube Config file could not be written")
+		logrus.Error(err)
+		return "", err
+	}
+	return configPath, nil
+}
+
+func (iClient *Client) generateInClusterKubeConfig(kubeConfigDir, configFile string) (string, error) {
+	if err := iClient.createDir(kubeConfigDir); err != nil {
+		err = errors.Wrapf(err, "unable to create kubeconfig directory")
+		logrus.Error(err)
+		return "", err
+	}
+	configPath := path.Join(kubeConfigDir, configFile)
+	err := exec.Command("/bin/sh", kubeConfigGenerationScript, configPath).Run()
+	if err != nil {
+		err = errors.Wrapf(err, "unable to generate kubeconfig for in-cluster environment")
+		logrus.Error(err)
+		return "", err
+	}
+	return configPath, nil
 }
 
 func (iClient *Client) createResource(ctx context.Context, res schema.GroupVersionResource, data *unstructured.Unstructured) error {

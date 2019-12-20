@@ -11,7 +11,7 @@ docker:
 docker-run:
 	(docker rm -f meshery-cpx) || true
 	docker run --name meshery-cpx -d \
-	-p 10010:10010 \
+	-p 10008:10008 \
 	-e DEBUG=true \
 	layer5/meshery-cpx
 
