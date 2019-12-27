@@ -37,7 +37,7 @@ metadata:
   name: httpbin-gateway
 spec:
   selector:
-    cpx: ingressgateway
+    app: citrix-ingressgateway
   servers:
   - port:
       number: 80
