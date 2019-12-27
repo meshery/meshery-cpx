@@ -37,9 +37,11 @@ type Client struct {
 	k8sDynamicClient dynamic.Interface
 	eventChan        chan *meshes.EventsResponse
 
-	cpxReleaseVersion     string
-	cpxReleaseDownloadURL string
-	cpxReleaseUpdatedAt   time.Time
+	cpxReleaseVersion       string
+	cpxReleaseDownloadURL   string
+	cpxReleaseUpdatedAt     time.Time
+	cpxResourcesVersion     string
+	cpxResourcesDownloadURL string
 }
 
 func configClient(kubeconfig []byte, contextName string) (*rest.Config, error) {

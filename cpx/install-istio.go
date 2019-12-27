@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -20,23 +21,38 @@ import (
 )
 
 const (
-	repoURL     = "https://api.github.com/repos/cpx/cpx/releases/latest"
-	urlSuffix   = "-linux.tar.gz"
-	crdPattern  = "crd(.*)yaml"
-	cachePeriod = 6 * time.Hour
+	repoURL                  = "https://api.github.com/repos/istio/istio/releases/19927523" // Istio v1.3.0
+	citrixRepoURL            = "https://github.com/citrix/citrix-istio-adaptor/archive/v1.1.0-beta.tar.gz"
+	urlSuffix                = "-linux.tar.gz"
+	crdPattern               = "crd(.*)yaml"
+	cachePeriod              = 6 * time.Hour
+	cpxGenerateYamlScriptURL = "https://raw.githubusercontent.com/citrix/citrix-istio-adaptor/master/deployment/generate_yaml.sh"
+	cpxIngressGatewayURL     = "https://raw.githubusercontent.com/citrix/citrix-istio-adaptor/master/deployment/cpx-ingressgateway.tmpl"
+	cpxSidecarInjectionURL   = "https://raw.githubusercontent.com/citrix/citrix-istio-adaptor/master/deployment/cpx-sidecar-injection-all-in-one.tmpl"
 )
 
 var (
-	localByPassFile = "/app/cpx.tar.gz"
+	localByPassFile = "/app/istio-1.3.0.tar.gz"
 
-	localFile                  = path.Join(os.TempDir(), "cpx.tar.gz")
-	destinationFolder          = path.Join(os.TempDir(), "cpx")
-	basePath                   = path.Join(destinationFolder, "%s")
-	installFile                = path.Join(basePath, "install/kubernetes/cpx-demo.yaml")
-	installWithmTLSFile        = path.Join(basePath, "install/kubernetes/cpx-demo-auth.yaml")
-	bookInfoInstallFile        = path.Join(basePath, "samples/bookinfo/platform/kube/bookinfo.yaml")
-	bookInfoGatewayInstallFile = path.Join(basePath, "samples/bookinfo/networking/bookinfo-gateway.yaml")
-	crdFolder                  = path.Join(basePath, "install/kubernetes/helm/cpx-init/files/")
+	localFile           = path.Join(os.TempDir(), "istio-1.3.0.tar.gz")
+	destinationFolder   = path.Join(os.TempDir(), "istio")
+	basePath            = path.Join(destinationFolder, "%s")
+	installFile         = path.Join(basePath, "install/kubernetes/istio-demo.yaml")
+	installWithmTLSFile = path.Join(basePath, "install/kubernetes/istio-demo-auth.yaml")
+	bookInfoInstallFile = path.Join(basePath, "samples/bookinfo/platform/kube/bookinfo.yaml")
+	//bookInfoGatewayInstallFile = path.Join(basePath, "samples/bookinfo/networking/bookinfo-gateway.yaml")
+	crdFolder = path.Join(basePath, "install/kubernetes/helm/istio-init/files/")
+
+	localCpxIstioByPassFile       = "/app/citrix-istio-adaptor-1.1.0-beta.tar.gz"
+	cpxIstioLocalFile             = path.Join(os.TempDir(), "citrix-istio-adaptor-1.1.0-beta.tar.gz")
+	cpxDestinationFolder          = path.Join(os.TempDir(), "citrix-istio-adaptor-1.1.0-beta")
+	cpxBasePath                   = path.Join(cpxDestinationFolder, "citrix-istio-adaptor-1.1.0-beta")
+	cpxGenerateYamlScript         = path.Join(cpxBasePath, "deployment/generate_yaml.sh")
+	cpxIngressGatewayFile         = path.Join(cpxBasePath, "deployment/cpx-ingressgateway.tmpl")
+	cpxSidecarInjectionFile       = path.Join(cpxBasePath, "deployment/cpx-sidecar-injection-all-in-one.tmpl")
+	cpxWebhookCertsScript         = path.Join(cpxBasePath, "deployment/webhook-create-signed-cert.sh")
+	bookInfoCpxGatewayInstallFile = path.Join(cpxBasePath, "examples/citrix-adc-in-istio/bookinfo/deployment-yaml/bookinfo_http_gateway.yaml")
+	bookInfoCpxVirtualServiceFile = path.Join(cpxBasePath, "examples/citrix-adc-in-istio/bookinfo/deployment-yaml/productpage_vs.yaml")
 
 	defaultBookInfoDestRulesFile                 = path.Join(basePath, "samples/bookinfo/networking/destination-rule-all-mtls.yaml")
 	bookInfoRouteToV1AllServicesFile             = path.Join(basePath, "samples/bookinfo/networking/virtual-service-all-v1.yaml")
@@ -93,6 +109,7 @@ func (iClient *Client) getLatestReleaseURL() error {
 		logrus.Debugf("retrieved api info: %+#v", result)
 		if result != nil && result.Assets != nil && len(result.Assets) > 0 {
 			for _, asset := range result.Assets {
+				logrus.Debugf("Asset name: %s", asset.Name)
 				if strings.HasSuffix(asset.Name, urlSuffix) {
 					iClient.cpxReleaseVersion = strings.Replace(asset.Name, urlSuffix, "", -1)
 					iClient.cpxReleaseDownloadURL = asset.DownloadURL
@@ -108,7 +125,16 @@ func (iClient *Client) getLatestReleaseURL() error {
 	return nil
 }
 
-func (iClient *Client) downloadFile(localFile string) error {
+func (iClient *Client) getCitrixIstioAdaptorURL() error {
+	if iClient.cpxResourcesDownloadURL == "" {
+		logrus.Debugf("Citrix Istio Adaptor API info url: %s", citrixRepoURL)
+		iClient.cpxResourcesDownloadURL = citrixRepoURL
+		return nil
+	}
+	return nil
+}
+
+func (iClient *Client) downloadFile(downloadURL, localFile string) error {
 	dFile, err := os.Create(localFile)
 	if err != nil {
 		err = errors.Wrapf(err, "unable to create a file on the filesystem at %s", localFile)
@@ -117,16 +143,17 @@ func (iClient *Client) downloadFile(localFile string) error {
 	}
 	defer dFile.Close()
 
-	resp, err := http.Get(iClient.cpxReleaseDownloadURL)
+	logrus.Debugf("Trying to download: %s", downloadURL)
+	resp, err := http.Get(downloadURL)
 	if err != nil {
-		err = errors.Wrapf(err, "unable to download the file from URL: %s", iClient.cpxReleaseDownloadURL)
+		err = errors.Wrapf(err, "unable to download the file from URL: %s", downloadURL)
 		logrus.Error(err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("unable to download the file from URL: %s, status: %s", iClient.cpxReleaseDownloadURL, resp.Status)
+		err = fmt.Errorf("unable to download the file from URL: %s, status: %s", downloadURL, resp.Status)
 		logrus.Error(err)
 		return err
 	}
@@ -209,7 +236,7 @@ func (iClient *Client) downloadCpx() (string, error) {
 		}
 		fileName = iClient.cpxReleaseVersion
 		downloadURL := iClient.cpxReleaseDownloadURL
-		logrus.Debugf("retrieved latest file name: %s and download url: %s", fileName, downloadURL)
+		logrus.Debugf("retrieved latest file name: %s and download url: %s. ", fileName, downloadURL)
 
 		proceedWithDownload := true
 
@@ -223,7 +250,7 @@ func (iClient *Client) downloadCpx() (string, error) {
 		}
 
 		if proceedWithDownload {
-			if err = iClient.downloadFile(localFile); err != nil {
+			if err = iClient.downloadFile(downloadURL, localFile); err != nil {
 				return "", err
 			}
 			logrus.Debug("package successfully downloaded, now unzipping . . .")
@@ -231,13 +258,54 @@ func (iClient *Client) downloadCpx() (string, error) {
 	} else {
 		localFile = localByPassFile
 		fileName = os.Getenv("ISTIO_VERSION")
-		logrus.Debugf("using local bypass file: %s & version name from env: %s", localFile, fileName)
+		logrus.Debugf("using local bypass file: %s & version name from env: %s.", localFile, fileName)
 	}
 	if err = iClient.untarPackage(destinationFolder, localFile); err != nil {
 		return "", err
 	}
 	logrus.Debug("successfully unzipped")
 	return fileName, nil
+}
+func (iClient *Client) downloadOtherCpxResources() (string, error) {
+	_, err := os.Stat(localCpxIstioByPassFile)
+	if err != nil {
+		logrus.Debug("preparing to download the cpx gateway, sidecar-webhook resources")
+		err = iClient.getCitrixIstioAdaptorURL()
+		if err != nil {
+			return "", err
+		}
+		cpxDownloadURL := iClient.cpxResourcesDownloadURL
+		logrus.Debugf("retrieved CPX Download URL: %s", cpxDownloadURL)
+
+		proceedWithDownload := true
+
+		lFileStat, err := os.Stat(cpxIstioLocalFile)
+		if err == nil {
+			if time.Since(lFileStat.ModTime()) > cachePeriod {
+				proceedWithDownload = true
+			} else {
+				proceedWithDownload = false
+			}
+		}
+
+		if proceedWithDownload {
+			if err = iClient.downloadFile(cpxDownloadURL, cpxIstioLocalFile); err != nil {
+				err = errors.Wrapf(err, "Citrix Istio Adaptor archive could not be downloaded")
+				logrus.Error(err)
+				return "", err
+			}
+			logrus.Debug("package successfully downloaded, now unzipping . . .")
+		}
+	} else {
+		cpxIstioLocalFile = localCpxIstioByPassFile
+		logrus.Debugf("using local cpx bypass file: %s", cpxIstioLocalFile)
+	}
+	if err = iClient.untarPackage(cpxDestinationFolder, cpxIstioLocalFile); err != nil {
+		err = errors.Wrapf(err, "Citrix Istio Adaptor archive could not be unzipped")
+		return "", err
+	}
+	logrus.Debug("successfully unzipped")
+	return "", nil
 }
 
 func (iClient *Client) getCpxComponentYAML(fileName string) (string, error) {
@@ -256,6 +324,124 @@ func (iClient *Client) getCpxComponentYAML(fileName string) (string, error) {
 		err = errors.Wrap(err, "unknown error")
 		logrus.Error(err)
 		return "", err
+	}
+	fileContents, err := ioutil.ReadFile(installFileLoc)
+	if err != nil {
+		err = errors.Wrap(err, "unable to read file")
+		logrus.Error(err)
+		return "", err
+	}
+	return string(fileContents), nil
+}
+
+func (iClient *Client) downloadFileFromURL(filepath, fileURL string) error {
+	resp, err := http.Get(fileURL)
+	if err != nil {
+		err = errors.Wrapf(err, "error getting data from %s", fileURL)
+		logrus.Error(err)
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		out, err := os.Create(filepath)
+		if err != nil {
+			err = errors.Wrapf(err, "Could not create %s file locally", filepath)
+			logrus.Error(err)
+			return err
+		}
+		defer out.Close()
+		// Write response body to file
+		_, err = io.Copy(out, resp.Body)
+		return err
+	}
+	err = errors.Wrapf(err, "Call failed with response status: %s", resp.Status)
+	logrus.Error(err)
+	return err
+}
+
+func (iClient *Client) generateCpxWebhookSecret() error {
+	_, err := os.Stat(cpxWebhookCertsScript)
+	if err != nil {
+		if os.IsNotExist(err) {
+			logrus.Error(err)
+			return err
+		}
+	}
+	err = exec.Command("/bin/sh", cpxWebhookCertsScript).Run()
+	if err != nil {
+		err = errors.Wrap(err, "Could not run CPX webhook script")
+		logrus.Error(err)
+		return err
+	}
+	logrus.Debugf("Certificate/secret generated for cpx-sidecar-injector webhook service")
+	return nil
+}
+
+func (iClient *Client) runGenerateYamlScript(inputTmplFile string) (string, error) {
+	_, err := os.Stat(cpxGenerateYamlScript)
+	if err != nil {
+		if os.IsNotExist(err) {
+			logrus.Error(err)
+			return "", err
+		}
+	}
+	outputYamlFile := strings.Replace(inputTmplFile, ".tmpl", ".yaml", -1)
+	logrus.Debugf("Output YAML file name: %s", outputYamlFile)
+	err = exec.Command("/bin/sh", cpxGenerateYamlScript, "--inputfile", inputTmplFile, "--outputfile", outputYamlFile).Run()
+	if err != nil {
+		logrus.Error(err)
+		return "", err
+	}
+	logrus.Debugf("%s YAML generated!", outputYamlFile)
+	return outputYamlFile, nil
+}
+
+func (iClient *Client) getCpxYamlContent(fileName, fileURL string) (string, error) {
+	yamlFileName := fileName
+	var err error
+	if err = iClient.downloadFileFromURL(fileName, fileURL); err != nil {
+		return "", err
+	}
+
+	if strings.HasSuffix(fileName, ".tmpl") {
+		// Generate yaml file using generate_yaml.sh script
+		yamlFileName, err = iClient.runGenerateYamlScript(fileName)
+		if err != nil {
+			logrus.Debugf("Could not generate YAML file from %s", fileName)
+			return "", err
+		}
+	}
+	fileContents, err := ioutil.ReadFile(yamlFileName)
+	if err != nil {
+		err = errors.Wrap(err, "unable to read file")
+		logrus.Error(err)
+		return "", err
+	}
+	return string(fileContents), nil
+}
+
+func (iClient *Client) getCpxOtherResourcesComponentYAML(fileName string) (string, error) {
+	if _, err := iClient.downloadOtherCpxResources(); err != nil {
+		return "", err
+	}
+	installFileLoc := fileName
+	logrus.Debugf("checking if install file exists at path: %s", installFileLoc)
+	_, err := os.Stat(installFileLoc)
+	if err != nil {
+		if os.IsNotExist(err) {
+			logrus.Error(err)
+			return "", err
+		}
+		err = errors.Wrap(err, "unknown error")
+		logrus.Error(err)
+		return "", err
+	}
+	if strings.HasSuffix(fileName, ".tmpl") {
+		// Generate yaml file using generate_yaml.sh script
+		installFileLoc, err = iClient.runGenerateYamlScript(fileName)
+		if err != nil {
+			logrus.Debugf("Could not generate YAML file from %s", fileName)
+		}
 	}
 	fileContents, err := ioutil.ReadFile(installFileLoc)
 	if err != nil {
@@ -302,10 +488,42 @@ func (iClient *Client) getCRDsYAML() ([]string, error) {
 }
 
 func (iClient *Client) getLatestCpxYAML(installmTLS bool) (string, error) {
+	var cpxYamlFileContents string
+	var err error
 	if installmTLS {
-		return iClient.getCpxComponentYAML(installWithmTLSFile)
+		cpxYamlFileContents, err = iClient.getCpxComponentYAML(installWithmTLSFile)
+	} else {
+		cpxYamlFileContents, err = iClient.getCpxComponentYAML(installFile)
 	}
-	return iClient.getCpxComponentYAML(installFile)
+	if err != nil {
+		return "", err
+	}
+	if _, err = iClient.downloadOtherCpxResources(); err != nil {
+		logrus.Debugf("Could not download Citrix Istio Adaptor resources.")
+		return "", err
+	}
+	cpxGatewayYaml, err := iClient.getCpxYamlContent(cpxIngressGatewayFile, cpxIngressGatewayURL)
+	if err != nil {
+		err = errors.Wrapf(err, "Could not retrieve %s", cpxIngressGatewayFile)
+		logrus.Error(err)
+		return "", err
+	}
+	// Generate certificate and secret needed for sidecar injection webhook service
+	if err = iClient.generateCpxWebhookSecret(); err != nil {
+		err = errors.Wrapf(err, "Could not generate secret for cpx-sidecar-injector webhook service")
+		logrus.Error(err)
+		return "", err
+	}
+
+	cpxSidecarYaml, err := iClient.getCpxYamlContent(cpxSidecarInjectionFile, cpxSidecarInjectionURL)
+	if err != nil {
+		err = errors.Wrapf(err, "Could not retrieve %s", cpxSidecarInjectionFile)
+		logrus.Error(err)
+		return "", err
+	}
+	cpxYamlFileContents += cpxGatewayYaml + cpxSidecarYaml
+	logrus.Debugf(" CPX YAML contents: %s\n", cpxYamlFileContents)
+	return cpxYamlFileContents, nil
 }
 
 func (iClient *Client) getBookInfoAppYAML() (string, error) {
@@ -313,7 +531,19 @@ func (iClient *Client) getBookInfoAppYAML() (string, error) {
 }
 
 func (iClient *Client) getBookInfoGatewayYAML() (string, error) {
-	return iClient.getCpxComponentYAML(bookInfoGatewayInstallFile)
+	gwYaml, err := iClient.getCpxOtherResourcesComponentYAML(bookInfoCpxGatewayInstallFile)
+	if err != nil {
+		err = errors.Wrapf(err, "Could not retrive %s", bookInfoCpxGatewayInstallFile)
+		logrus.Error(err)
+		return "", err
+	}
+	vsYaml, err := iClient.getCpxOtherResourcesComponentYAML(bookInfoCpxVirtualServiceFile)
+	if err != nil {
+		err = errors.Wrapf(err, "Could not retrive %s", bookInfoCpxVirtualServiceFile)
+		logrus.Error(err)
+		return "", err
+	}
+	return gwYaml + vsYaml, nil
 }
 
 func (iClient *Client) getBookInfoDefaultDesinationRulesYAML() (string, error) {
