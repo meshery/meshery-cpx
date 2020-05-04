@@ -1,4 +1,4 @@
-name: Meshery CPX
+name: meshery-cpx
 on:
   push:
     branches:
