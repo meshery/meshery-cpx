@@ -22,7 +22,7 @@ import (
 
 const (
 	repoURL                  = "https://api.github.com/repos/istio/istio/releases/19927523" // Istio v1.3.0
-	citrixRepoURL            = "https://github.com/citrix/citrix-istio-adaptor/archive/v1.1.0-beta.tar.gz"
+	citrixRepoURL            = "https://github.com/citrix/citrix-istio-adaptor/archive/v1.2.0-beta.tar.gz"
 	urlSuffix                = "-linux.tar.gz"
 	crdPattern               = "crd(.*)yaml"
 	cachePeriod              = 6 * time.Hour
@@ -43,10 +43,10 @@ var (
 	//bookInfoGatewayInstallFile = path.Join(basePath, "samples/bookinfo/networking/bookinfo-gateway.yaml")
 	crdFolder = path.Join(basePath, "install/kubernetes/helm/istio-init/files/")
 
-	localCpxIstioByPassFile       = "/app/citrix-istio-adaptor-1.1.0-beta.tar.gz"
-	cpxIstioLocalFile             = path.Join(os.TempDir(), "citrix-istio-adaptor-1.1.0-beta.tar.gz")
-	cpxDestinationFolder          = path.Join(os.TempDir(), "citrix-istio-adaptor-1.1.0-beta")
-	cpxBasePath                   = path.Join(cpxDestinationFolder, "citrix-istio-adaptor-1.1.0-beta")
+	localCpxIstioByPassFile       = "/app/citrix-istio-adaptor-1.2.0-beta.tar.gz"
+	cpxIstioLocalFile             = path.Join(os.TempDir(), "citrix-istio-adaptor-1.2.0-beta.tar.gz")
+	cpxDestinationFolder          = path.Join(os.TempDir(), "citrix-istio-adaptor-1.2.0-beta")
+	cpxBasePath                   = path.Join(cpxDestinationFolder, "citrix-istio-adaptor-1.2.0-beta")
 	cpxGenerateYamlScript         = path.Join(cpxBasePath, "deployment/generate_yaml.sh")
 	cpxIngressGatewayFile         = path.Join(cpxBasePath, "deployment/cpx-ingressgateway.tmpl")
 	cpxSidecarInjectionFile       = path.Join(cpxBasePath, "deployment/cpx-sidecar-injection-all-in-one.tmpl")

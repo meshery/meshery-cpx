@@ -248,7 +248,7 @@ func (iClient *Client) updateResource(ctx context.Context, res schema.GroupVersi
 
 // MeshName just returns the name of the mesh the client is representing
 func (iClient *Client) MeshName(context.Context, *meshes.MeshNameRequest) (*meshes.MeshNameResponse, error) {
-	return &meshes.MeshNameResponse{Name: "Cpx"}, nil
+	return &meshes.MeshNameResponse{Name: "Citrix Service Mesh"}, nil
 }
 
 func (iClient *Client) applyRulePayload(ctx context.Context, namespace string, newBytes []byte, delete, isCustomOp bool) error {
