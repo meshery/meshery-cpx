@@ -22,7 +22,7 @@ import (
 
 const (
 	repoURL                  = "https://api.github.com/repos/istio/istio/releases/19927523" // Istio v1.3.0
-	citrixRepoURL            = "https://github.com/citrix/citrix-istio-adaptor/archive/v1.1.0-beta.tar.gz"
+	citrixRepoURL            = "https://github.com/citrix/citrix-istio-adaptor/archive/v1.2.0-beta.tar.gz"
 	urlSuffix                = "-linux.tar.gz"
 	crdPattern               = "crd(.*)yaml"
 	cachePeriod              = 6 * time.Hour
@@ -43,10 +43,10 @@ var (
 	//bookInfoGatewayInstallFile = path.Join(basePath, "samples/bookinfo/networking/bookinfo-gateway.yaml")
 	crdFolder = path.Join(basePath, "install/kubernetes/helm/istio-init/files/")
 
-	localCpxIstioByPassFile       = "/app/citrix-istio-adaptor-1.1.0-beta.tar.gz"
-	cpxIstioLocalFile             = path.Join(os.TempDir(), "citrix-istio-adaptor-1.1.0-beta.tar.gz")
-	cpxDestinationFolder          = path.Join(os.TempDir(), "citrix-istio-adaptor-1.1.0-beta")
-	cpxBasePath                   = path.Join(cpxDestinationFolder, "citrix-istio-adaptor-1.1.0-beta")
+	localCpxIstioByPassFile       = "/app/citrix-istio-adaptor-1.2.0-beta.tar.gz"
+	cpxIstioLocalFile             = path.Join(os.TempDir(), "citrix-istio-adaptor-1.2.0-beta.tar.gz")
+	cpxDestinationFolder          = path.Join(os.TempDir(), "citrix-istio-adaptor-1.2.0-beta")
+	cpxBasePath                   = path.Join(cpxDestinationFolder, "citrix-istio-adaptor-1.2.0-beta")
 	cpxGenerateYamlScript         = path.Join(cpxBasePath, "deployment/generate_yaml.sh")
 	cpxIngressGatewayFile         = path.Join(cpxBasePath, "deployment/cpx-ingressgateway.tmpl")
 	cpxSidecarInjectionFile       = path.Join(cpxBasePath, "deployment/cpx-sidecar-injection-all-in-one.tmpl")
@@ -84,7 +84,11 @@ func (iClient *Client) getLatestReleaseURL() error {
 			logrus.Error(err)
 			return err
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				logrus.Error(err)
+			}
+		}()
 
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("unable to fetch release info due to an unexpected status code: %d", resp.StatusCode)
@@ -141,7 +145,11 @@ func (iClient *Client) downloadFile(downloadURL, localFile string) error {
 		logrus.Error(err)
 		return err
 	}
-	defer dFile.Close()
+	defer func() {
+		if err := dFile.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 
 	logrus.Debugf("Trying to download: %s", downloadURL)
 	resp, err := http.Get(downloadURL)
@@ -150,7 +158,11 @@ func (iClient *Client) downloadFile(downloadURL, localFile string) error {
 		logrus.Error(err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("unable to download the file from URL: %s, status: %s", downloadURL, resp.Status)
@@ -181,7 +193,11 @@ func (iClient *Client) untarPackage(destination, fileToUntar string) error {
 		logrus.Error(err)
 		return err
 	}
-	defer gzReader.Close()
+	defer func() {
+		if err := gzReader.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 
 	tarReader := tar.NewReader(gzReader)
 	for {
@@ -220,7 +236,10 @@ func (iClient *Client) untarPackage(destination, fileToUntar string) error {
 				logrus.Error(err)
 				return err
 			}
-			fileAtLoc.Close()
+			if err := fileAtLoc.Close(); err != nil {
+				logrus.Error(err)
+				return err
+			}
 		}
 	}
 }
@@ -341,7 +360,11 @@ func (iClient *Client) downloadFileFromURL(filepath, fileURL string) error {
 		logrus.Error(err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 	if resp.StatusCode == 200 {
 		out, err := os.Create(filepath)
 		if err != nil {
@@ -349,7 +372,11 @@ func (iClient *Client) downloadFileFromURL(filepath, fileURL string) error {
 			logrus.Error(err)
 			return err
 		}
-		defer out.Close()
+		defer func() {
+			if err := out.Close(); err != nil {
+				logrus.Error(err)
+			}
+		}()
 		// Write response body to file
 		_, err = io.Copy(out, resp.Body)
 		return err
