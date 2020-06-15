@@ -84,7 +84,11 @@ func (iClient *Client) getLatestReleaseURL() error {
 			logrus.Error(err)
 			return err
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				logrus.Error(err)
+			}
+		}()
 
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("unable to fetch release info due to an unexpected status code: %d", resp.StatusCode)
@@ -141,7 +145,11 @@ func (iClient *Client) downloadFile(downloadURL, localFile string) error {
 		logrus.Error(err)
 		return err
 	}
-	defer dFile.Close()
+	defer func() {
+		if err := dFile.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 
 	logrus.Debugf("Trying to download: %s", downloadURL)
 	resp, err := http.Get(downloadURL)
@@ -150,7 +158,11 @@ func (iClient *Client) downloadFile(downloadURL, localFile string) error {
 		logrus.Error(err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("unable to download the file from URL: %s, status: %s", downloadURL, resp.Status)
@@ -181,7 +193,11 @@ func (iClient *Client) untarPackage(destination, fileToUntar string) error {
 		logrus.Error(err)
 		return err
 	}
-	defer gzReader.Close()
+	defer func() {
+		if err := gzReader.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 
 	tarReader := tar.NewReader(gzReader)
 	for {
@@ -220,7 +236,10 @@ func (iClient *Client) untarPackage(destination, fileToUntar string) error {
 				logrus.Error(err)
 				return err
 			}
-			fileAtLoc.Close()
+			if err := fileAtLoc.Close(); err != nil {
+				logrus.Error(err)
+				return err
+			}
 		}
 	}
 }
@@ -341,7 +360,11 @@ func (iClient *Client) downloadFileFromURL(filepath, fileURL string) error {
 		logrus.Error(err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 	if resp.StatusCode == 200 {
 		out, err := os.Create(filepath)
 		if err != nil {
@@ -349,7 +372,11 @@ func (iClient *Client) downloadFileFromURL(filepath, fileURL string) error {
 			logrus.Error(err)
 			return err
 		}
-		defer out.Close()
+		defer func() {
+			if err := out.Close(); err != nil {
+				logrus.Error(err)
+			}
+		}()
 		// Write response body to file
 		_, err = io.Copy(out, resp.Body)
 		return err

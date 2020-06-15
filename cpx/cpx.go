@@ -93,7 +93,10 @@ func (iClient *Client) setKubeConfig(k8sConfig []byte) error {
 			return err
 		}
 	}
-	os.Setenv("KUBECONFIG", configPath)
+	if err = os.Setenv("KUBECONFIG", configPath); err != nil {
+		logrus.Debugf("Could not set KUBECONFIG env variable")
+		return nil
+	}
 	logrus.Debugf("KUBECONFIG: %s", os.Getenv("KUBECONFIG"))
 	return nil
 }
@@ -355,7 +358,9 @@ RETRY:
 			if err = iClient.updateResource(ctx, res, data); err != nil {
 				if strings.Contains(err.Error(), "the server does not allow this method on the requested resource") {
 					logrus.Info("attempting to delete resource. . . ")
-					iClient.deleteResource(ctx, res, data)
+					if deleteError := iClient.deleteResource(ctx, res, data); deleteError != nil {
+						logrus.Error(deleteError)
+					}
 					trackRetry++
 					if trackRetry <= 3 {
 						goto RETRY
@@ -457,7 +462,11 @@ func (iClient *Client) executeTemplate(ctx context.Context, username, namespace,
 func (iClient *Client) executeInstall(ctx context.Context, installmTLS bool, arReq *meshes.ApplyRuleRequest) error {
 	arReq.Namespace = ""
 	if arReq.DeleteOp {
-		defer iClient.applyCpxCRDs(ctx, arReq.DeleteOp)
+		defer func() {
+			if err := iClient.applyCpxCRDs(ctx, arReq.DeleteOp); err != nil {
+				logrus.Error(err)
+			}
+		}()
 	} else {
 		if err := iClient.applyCpxCRDs(ctx, arReq.DeleteOp); err != nil {
 			return err
@@ -509,7 +518,11 @@ func (iClient *Client) executeHipsterShopInstall(ctx context.Context, arReq *mes
 			logrus.Error(err)
 			return "", err
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				logrus.Error(err)
+			}
+		}()
 		if resp.StatusCode == 200 {
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
@@ -694,17 +707,20 @@ func (iClient *Client) ApplyOperation(ctx context.Context, arReq *meshes.ApplyRu
 		}
 	case installSMI:
 		if !arReq.DeleteOp && arReq.Namespace != "default" {
-			iClient.createNamespace(ctx, arReq.Namespace)
+			if err := iClient.createNamespace(ctx, arReq.Namespace); err != nil {
+				logrus.Error(err)
+				return nil, err
+			}
 		}
 		yamlFileContents, err = getSMIYamls()
 		if err != nil {
 			return nil, err
 		}
 	case runVet:
-		go iClient.runVet()
+		err = iClient.runVet()
 		return &meshes.ApplyRuleResponse{
 			OperationId: arReq.OperationId,
-		}, nil
+		}, err
 	case customOpCommand:
 		yamlFileContents = arReq.CustomBody
 		isCustomOp = true
@@ -832,7 +848,11 @@ func (iClient *Client) splitYAML(yamlContents string) ([]string, error) {
 		logrus.Error(err)
 		return nil, err
 	}
-	defer yamlDecoder.Close()
+	defer func() {
+		if err := yamlDecoder.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 	var err error
 	n := 0
 	data := [][]byte{}
