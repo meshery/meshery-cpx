@@ -25,7 +25,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	golang.org/x/tools v0.0.0-20191005014404-c9f9432ec4b2 // indirect
-	google.golang.org/grpc v1.31.0
+	google.golang.org/grpc v1.31.1
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	istio.io/api v0.0.0-20190905172106-906cbe6415a5 // indirect
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab // indirect
