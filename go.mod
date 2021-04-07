@@ -9,6 +9,7 @@ require (
 	github.com/cnf/structhash v0.0.0-20180104161610-62a607eb0224 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.3.0 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/gophercloud/gophercloud v0.4.0 // indirect
@@ -16,16 +17,15 @@ require (
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/json-iterator/go v1.1.7 // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/onsi/ginkgo v1.16.1 // indirect
+	github.com/onsi/gomega v1.11.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/pflag v1.0.3 // indirect
-	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
-	golang.org/x/lint v0.0.0-20190930215403-16217165b5de // indirect
-	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
+	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
-	golang.org/x/tools v0.0.0-20191005014404-c9f9432ec4b2 // indirect
-	google.golang.org/grpc v1.34.0
+	google.golang.org/grpc v1.37.0
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	istio.io/api v0.0.0-20190905172106-906cbe6415a5 // indirect
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab // indirect
