@@ -1,11 +1,13 @@
-<p style="text-align:center;" align="center"><a href="https://layer5.io/meshery"><img align="center" style="margin-bottom:20px;" src="https://raw.githubusercontent.com/layer5io/layer5/master/.github/assets/images/meshery/meshery-logo-tag-light-text-side.png"  width="70%" /></a><br /><br /></p>
+<p style="text-align:center;" align="center"><a href="https://layer5.io/meshery">
+<img src="https://raw.githubusercontent.com/layer5io/layer5/master/.github/assets/images/meshery/meshery-logo-tag-light-text-side.png" width="70%" />
+</a><br /><br /></p>
 
 # Meshery Adapter for CPX
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/layer5/meshery-cpx.svg)](https://hub.docker.com/r/layer5/meshery-cpx)
 [![Go Report Card](https://goreportcard.com/badge/github.com/layer5io/meshery-cpx)](https://goreportcard.com/report/github.com/layer5io/meshery-cpx)
-[![Build Status](https://github.com/meshery/meshery-cpx/workflows/meshery-cpx/badge.svg)](https://github.com/layer5io/meshery-cpx/actions)
-[![GitHub](https://img.shields.io/github/license/layer5io/meshery-cpx.svg)](LICENSE)
+<a href="https://github.com/meshery/meshery/actions" alt="Build Status">
+  <img src="https://img.shields.io/github/workflow/status/meshery/meshery/Meshery%20Build%20and%20Releaser%20(edge)" /></a>[![GitHub](https://img.shields.io/github/license/layer5io/meshery-cpx.svg)](LICENSE)
 [![GitHub issues by-label](https://img.shields.io/github/issues/layer5io/meshery-cpx/help%20wanted.svg)](https://github.com/layer5io/meshery-cpx/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
 [![Website](https://img.shields.io/website/https/layer5.io/meshery.svg)](https://layer5.io/meshery/)
 [![Twitter Follow](https://img.shields.io/twitter/follow/layer5.svg?label=Follow&style=social)](https://twitter.com/intent/follow?screen_name=mesheryio)
@@ -14,7 +16,7 @@
 
 <p style="clear:both;">
 <h2><a href="https://layer5.io/meshery">Meshery</a></h2>
-<a href="https://meshery.io"><img src="img/readme/meshery-logo-light-text.svg"
+<a href="https://meshery.io"><img src="https://raw.githubusercontent.com/meshery/meshery-cpx/master/img/readme/meshery-logo-light-text.svg"
 style="margin:10px;" width="125px" 
 alt="Meshery - the Service Mesh Management Plane" align="left" /></a>
 <a href="https://meshery.io">Meshery</a> is the multi-service mesh management plane offering lifecycle management of more types of service meshes than any other tool available today. Meshery facilitates adopting, configuring, operating and managing performance of different service meshes and incorporates the collection and display of metrics from applications running on top of any service mesh. 
@@ -25,9 +27,9 @@ alt="Meshery - the Service Mesh Management Plane" align="left" /></a>
 <h2><a name="contributing"></a><a name="community"></a> <a href="http://slack.layer5.io">Community</a> and <a href="https://github.com/layer5io/layer5/blob/master/CONTRIBUTING.md">Contributing</a></h2>
 Our projects are community-built and welcome collaboration. 👍 Be sure to see the <a href="https://docs.google.com/document/d/17OPtDE_rdnPQxmk2Kauhm3GwXF1R5dZ3Cj8qZLKdo5E/edit">Layer5 Community Welcome Guide</a> for a tour of resources available to you and jump into our <a href="http://slack.layer5.io">Slack</a>! Contributors are expected to adhere to the <a href="https://github.com/cncf/foundation/blob/master/code-of-conduct.md">CNCF Code of Conduct</a>.
 
-<a href="https://meshery.io/community"><img alt="Layer5 Service Mesh Community" src="img/readme/slack-128.png" style="margin-left:10px;padding-top:5px;" width="110px" align="right" /></a>
+<a href="https://meshery.io/community"><img alt="Layer5 Service Mesh Community" src="https://raw.githubusercontent.com/meshery/meshery-cpx/master/img/readme/slack-128.png" style="margin-left:10px;padding-top:5px;" width="110px" align="right" /></a>
 
-<a href="http://slack.layer5.io"><img alt="Layer5 Service Mesh Community" src="img/readme/community.svg" style="margin-right:8px;padding-top:5px;" width="140px" align="left" /></a>
+<a href="http://slack.layer5.io"><img alt="Layer5 Service Mesh Community" src="https://raw.githubusercontent.com/meshery/meshery-cpx/master/img/readme/community.svg" style="margin-right:8px;padding-top:5px;" width="140px" align="left" /></a>
 
 <p>
 	
