@@ -1,10 +1,14 @@
-FROM golang:1.13.1 as bd
+FROM golang:1.17 as bd
+
+ARG VERSION
+ARG GIT_COMMITSHA
 RUN adduser --disabled-login --gecos "" appuser
 WORKDIR /github.com/layer5io/meshery-cpx
 ADD . .
 RUN GOPROXY=direct GOSUMDB=off go build -ldflags="-w -s" -a -o /meshery-cpx .
 RUN find . -name "*.go" -type f -delete; mv cpx /
 RUN wget -O /istio-1.3.0.tar.gz https://github.com/istio/istio/releases/download/1.3.0/istio-1.3.0-linux.tar.gz
+RUN GOPROXY=https://proxy.golang.org,direct CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -ldflags="-w -s -X main.version=$VERSION -X main.gitsha=$GIT_COMMITSHA" -a -o meshery-istio main.go
 RUN wget -O /citrix-istio-adaptor-1.1.0-beta.tar.gz https://github.com/citrix/citrix-istio-adaptor/archive/v1.1.0-beta.tar.gz
 
 FROM alpine
