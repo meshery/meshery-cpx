@@ -1,5 +1,8 @@
 <p style="text-align:center;" align="center"><a href="https://layer5.io/meshery">
-<img src="./img/readme/meshery-logo-dark-text-side.svg" width="70%" />
+<picture align='center'>
+<img src="./img/readme/meshery-logo-dark-text-side.svg#gh-light-mode-only" width="70%" />
+<img src="./img/readme/meshery-logo-light-text-side.svg#gh-dark-mode-only" width="70%" />
+</picture>
 </a><br /><br /></p>
 
 # Meshery Adapter for CPX
