@@ -22,7 +22,7 @@
 <a href="https://meshery.io">
 <picture><img src="./img/readme/meshery-logo-light-text.svg#gh-dark-mode-only"
 style="margin:10px;" width="10%" 
-alt="Meshery - the Service Mesh Management Plane" align="left" />
+alt="Meshery - the Cloud Native Manager" align="left" />
 <img src="./img/readme/meshery-logo-dark-text.svg#gh-light-mode-only"
 style="margin:10px;" width="10%" 
 alt="Meshery - the Service Mesh Management Plane" align="left" /></picture></a>
