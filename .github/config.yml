@@ -18,8 +18,8 @@ firstPRMergeComment: >
   Thanks for your contribution to Meshery! :tada:
    
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/meshery/meshery-cpx/master/.github/assets/images/welcome/meshery-celebration-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/meshery/meshery-cpx/master/.github/assets/images/welcome/meshery-celebration-light.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/meshery/meshery-cpx/master/.github/assets/images/welcome/meshery-celebration-light.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/meshery/meshery-cpx/master/.github/assets/images/welcome/meshery-celebration-dark.svg">
     <img alt="Meshery Logo" src="">
   </picture>
 
