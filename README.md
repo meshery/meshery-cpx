@@ -9,8 +9,8 @@
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/layer5/meshery-cpx.svg)](https://hub.docker.com/r/layer5/meshery-cpx)
 [![Go Report Card](https://goreportcard.com/badge/github.com/layer5io/meshery-cpx)](https://goreportcard.com/report/github.com/layer5io/meshery-cpx)
-<a href="https://github.com/meshery/meshery/actions" alt="Build Status">
-  <img src="https://img.shields.io/github/workflow/status/meshery/meshery/Meshery%20Build%20and%20Releaser%20(edge)" /></a>[![GitHub](https://img.shields.io/github/license/layer5io/meshery-cpx.svg)](LICENSE)
+ [![Build Status](https://img.shields.io/github/actions/workflow/status/meshery/meshery-cpx/multi-platform.yml?branch=master)](https://github.com/meshery/meshery-cpx/actions) 
+  [![GitHub](https://img.shields.io/github/license/layer5io/meshery-cpx.svg)](LICENSE)
 [![GitHub issues by-label](https://img.shields.io/github/issues/layer5io/meshery-cpx/help%20wanted.svg)](https://github.com/layer5io/meshery-cpx/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
 [![Website](https://img.shields.io/website/https/layer5.io/meshery.svg)](https://layer5.io/meshery/)
 [![Twitter Follow](https://img.shields.io/twitter/follow/layer5.svg?label=Follow&style=social)](https://twitter.com/intent/follow?screen_name=mesheryio)
