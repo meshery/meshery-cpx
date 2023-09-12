@@ -1,4 +1,4 @@
-FROM golang:1.17 as bd
+FROM golang:1.21 as bd
 
 ARG VERSION
 ARG GIT_COMMITSHA
