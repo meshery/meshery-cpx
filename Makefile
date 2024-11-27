@@ -16,7 +16,7 @@ docker-run:
 	layer5/meshery-cpx
 
 run:
-	go mod tidy; \
+	go$(v) mod tidy; \
 	DEBUG=true GOPROXY=direct GOSUMDB=off go run main.go
 
 error:
