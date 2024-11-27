@@ -8,7 +8,7 @@ require (
 	github.com/aspenmesh/istio-vet v0.0.0-20190708155745-fac74e54e2e6
 	github.com/cnf/structhash v0.0.0-20180104161610-62a607eb0224 // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/gogo/protobuf v1.3.0 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/googleapis/gnostic v0.3.1 // indirect
