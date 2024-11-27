@@ -16,7 +16,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/json-iterator/go v1.1.7 // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/onsi/gomega v1.12.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
@@ -28,9 +27,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	istio.io/api v0.0.0-20190905172106-906cbe6415a5 // indirect
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab // indirect
-	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
+	k8s.io/apimachinery v0.15.7
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/klog v0.4.0 // indirect
 	k8s.io/utils v0.0.0-20190829053155-3a4a5477acf8 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )
